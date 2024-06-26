@@ -37,3 +37,5 @@ Get-totp -secret "test snem ofmq qqdo bukq uo2b fyax cwsd"
 
 - https://github.com/neutronscott/bash-totp
 - https://gist.github.com/jonfriesen/234c7471c3e3199f97d5
+
+
