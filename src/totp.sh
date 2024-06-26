@@ -1,11 +1,16 @@
 #!/bin/bash
+usage() {
+    totp <shared key ] >[
+    exit 1
+}
 
 totp() {
     local key="${1// /}" digits=${2:- 6} step=${3:- 30}
-    local epoch_time
+    local epoch_time dgst
 
     hmac_sha1() {
         local key=$1 msg=$2 i
+        local ipad opad
 
         sha1() {
             local in=$1 msg
@@ -81,8 +86,8 @@ totp() {
 
         #xor key 32-bit at a time
         for ((i = 0; i < 128; i += 8)); do
-            ipad=$(printf "%s%08X" "$ipad" "$((((16#${key:i:8}) ^ 0x36363636) & 0xFFFFFFFF))")
-            opad=$(printf "%s%08X" "$opad" "$((((16#${key:i:8}) ^ 0x5C5C5C5C) & 0xFFFFFFFF))")
+            printf -v ipad "%s%08X" "$ipad" "$((((16#${key:i:8}) ^ 0x36363636) & 0xFFFFFFFF))"
+            printf -v opad "%s%08X" "$opad" "$((((16#${key:i:8}) ^ 0x5C5C5C5C) & 0xFFFFFFFF))"
         done
 
         sha1 "${opad}$(sha1 "${ipad}${msg}")"
@@ -92,6 +97,8 @@ totp() {
         toupper() { echo "$1" | tr '[:lower:]' '[:upper:]'; }
         local in=$(toupper "$1") c buffer idx bitsLeft=0 count=0 result
         local v='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567!'
+        local hex
+
         for ((i = 0; i < ${#in}; i++)); do
             c=${in:i+j:1}
             [[ $c = [[:space:]-] ]] && continue
@@ -114,24 +121,30 @@ totp() {
         printf '%s' "$hex"
     }
 
-    local hkey="$(base32d "$1")"
+    local base32key="$(base32d "$key")"
     epoch_time=$(date +%s)
     printf -v step '%016X' "$((epoch_time / step))"
-    dgst=$(hmac_sha1 "$hkey" "$step")
+    dgst=$(hmac_sha1 "$base32key" "$step")
 
     offset=$((2 * 16#${dgst: -1}))
     token=$(((16#${dgst:offset:8} & 0x7fffffff) % 10 ** digits))
     printf '%06d' "$token"
 }
 
-sharedkey="test snem ofmq qqdo bukq uo2b fyax cwsd"
+if [ -z "$1" ]; then
+    usage
+fi
+
+sharedkey="$1"
 token_length="6"
 window="30"
 
-echo "token expires in $(($window - ($(date +%s) % $window)))"
+temp="$(totp "$sharedkey" "$token_length" "$window")"
 
-temp="$(totp \
-    "$sharedkey" \
-    "$token_length" \
-    "$window")"
-printf "%s\n" "$temp"
+if [ "$2" == "--batch" ]; then
+    printf "%s" "$temp"
+else
+    echo "token expires in $(($window - ($(date +%s) % $window)))"
+    printf "%s\n" "$temp"
+fi
+
