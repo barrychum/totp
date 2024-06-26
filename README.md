@@ -15,7 +15,12 @@ This repository provides a function for generating Time-based One-Time Passwords
 
 bash
 ```
-totp.sh "secret" ["token length" ["token valid duration"] ]
+get-otp.sh "secret" ["token length" ["token valid duration"] ]
+
+# most systems use a token length of 6 characters
+# set this to the length required by the login systm
+# token duration cannot be longer than 30 seconds
+# otherwise the generated token will not work
 
 # e.g Don't care the spaces in token. 
 # Just put it in quotation marks if contains spaces

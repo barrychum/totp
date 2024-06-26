@@ -1,6 +1,8 @@
 #!/bin/bash
 usage() {
-    totp <shared key ] >[
+    echo "$0 <shared key> [--batch]"
+    echo "If this script is called by other functions"
+    echo "set this to batch mode to suppress other messages"
     exit 1
 }
 
@@ -127,7 +129,7 @@ totp() {
     dgst=$(hmac_sha1 "$base32key" "$step")
 
     offset=$((2 * 16#${dgst: -1}))
-    token=$(((16#${dgst:offset:8} & 0x7fffffff) % 10 ** digits))
+    local token=$(((16#${dgst:offset:8} & 0x7fffffff) % 10 ** digits))
     printf '%06d' "$token"
 }
 
@@ -136,15 +138,26 @@ if [ -z "$1" ]; then
 fi
 
 sharedkey="$1"
+
+# set this to the length of the token.
+# most systems use a 6 character token
 token_length="6"
+
+# if token window is set longer than 30 secs, 
+# the generated token will not work
 window="30"
 
-temp="$(totp "$sharedkey" "$token_length" "$window")"
+token="$(totp "$sharedkey" "$token_length" "$window")"
 
+unset sharedkey
+
+# if this is run in batch mode e.g. used by fzf
+# don't print any messages other than the token itself
 if [ "$2" == "--batch" ]; then
-    printf "%s" "$temp"
+    printf "%s" "$token"
 else
+    # display the life of the token
     echo "token expires in $(($window - ($(date +%s) % $window)))"
-    printf "%s\n" "$temp"
+    printf "%s\n" "$token"
 fi
 
