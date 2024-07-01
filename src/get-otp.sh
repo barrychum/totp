@@ -1,4 +1,5 @@
 #!/bin/bash
+
 usage() {
     echo "$0 <shared key> [--batch]"
     echo "If this script is called by other functions"
