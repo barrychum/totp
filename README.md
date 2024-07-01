@@ -7,7 +7,6 @@ This repository provides a function for generating Time-based One-Time Passwords
 * Supports Linux and macOS using bash, and Windows using PowerShell.
 * Generates TOTP codes based on a secret key and current time.
 
-
 **Additional Notes**
 
 * This is a basic implementation using sha1 (RFC 6238).
