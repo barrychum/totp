@@ -160,4 +160,3 @@ else
     echo "token expires in $(($window - ($(date +%s) % $window)))"
     printf "%s\n" "$token"
 fi
-
